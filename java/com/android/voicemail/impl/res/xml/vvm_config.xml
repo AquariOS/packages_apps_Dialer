@@ -72,6 +72,9 @@
     <string name="vvm_destination_number_string">7723</string>
     <string name="vvm_type_string">vvm_type_omtp</string>
     <boolean
+        name="vvm_prefetch_bool"
+        value="true" />
+    <boolean
         name="vvm_cellular_data_required_bool"
         value="true"/>
   </pbundle_as_map>
