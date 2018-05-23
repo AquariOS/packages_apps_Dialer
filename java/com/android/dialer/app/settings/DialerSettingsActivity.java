@@ -21,6 +21,7 @@ import android.content.SharedPreferences;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -36,6 +37,7 @@ import com.android.dialer.about.AboutPhoneFragment;
 import com.android.dialer.app.R;
 import com.android.dialer.blocking.FilteredNumberCompat;
 import com.android.dialer.common.LogUtil;
+import com.android.dialer.lookup.LookupSettingsFragment;
 import com.android.dialer.proguard.UsedByReflection;
 import com.android.voicemail.VoicemailClient;
 import com.android.voicemail.VoicemailComponent;
@@ -89,8 +91,21 @@ public class DialerSettingsActivity extends AppCompatPreferenceActivity {
     quickResponseSettingsHeader.intent = quickResponseSettingsIntent;
     target.add(quickResponseSettingsHeader);
 
+    final Header lookupSettingsHeader = new Header();
+    lookupSettingsHeader.titleRes = R.string.lookup_settings_label;
+    lookupSettingsHeader.fragment = LookupSettingsFragment.class.getName();
+    target.add(lookupSettingsHeader);
+
     TelephonyManager telephonyManager =
         (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
+    if (isSpeakerAllowed()) {
+        Header speakerSettingsHeader = new Header();
+        speakerSettingsHeader.titleRes = R.string.speaker_settings_label;
+        speakerSettingsHeader.fragment = SpeakerSettingsFragment.class.getName();
+        speakerSettingsHeader.id = R.id.settings_header_proximity_speakerphone;
+        target.add(speakerSettingsHeader);
+    }
 
     // "Call Settings" (full settings) is shown if the current user is primary user and there
     // is only one SIM. Before N, "Calling accounts" setting is shown if the current user is
@@ -134,6 +149,11 @@ public class DialerSettingsActivity extends AppCompatPreferenceActivity {
       accessibilitySettingsHeader.intent = accessibilitySettingsIntent;
       target.add(accessibilitySettingsHeader);
     }
+
+    Header OtherSettingsHeader = new Header();
+    OtherSettingsHeader.titleRes = R.string.other_settings_label;
+    OtherSettingsHeader.fragment = OtherSettingsFragment.class.getName();
+    target.add(OtherSettingsHeader);
 
     Header aboutPhoneHeader = new Header();
     aboutPhoneHeader.titleRes = R.string.about_phone_label;
@@ -264,5 +284,14 @@ public class DialerSettingsActivity extends AppCompatPreferenceActivity {
   /** @return Whether the current user is the primary user. */
   private boolean isPrimaryUser() {
     return getSystemService(UserManager.class).isSystemUser();
+  }
+
+  /**
+  * @return Whether proximity speakerphone is allowed
+  */
+  private boolean isSpeakerAllowed() {
+    PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+    return pm.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)
+    && getResources().getBoolean(R.bool.config_enabled_speakerprox);
   }
 }

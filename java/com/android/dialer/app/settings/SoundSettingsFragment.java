@@ -70,6 +70,7 @@ public class SoundSettingsFragment extends PreferenceFragment
       };
   private SwitchPreference mVibrateWhenRinging;
   private SwitchPreference mPlayDtmfTone;
+  private SwitchPreference mInCallNotificationsVibrate;
   private ListPreference mDtmfToneLength;
 
   @Override
@@ -88,6 +89,8 @@ public class SoundSettingsFragment extends PreferenceFragment
     mRingtonePreference = findPreference(context.getString(R.string.ringtone_preference_key));
     mVibrateWhenRinging =
         (SwitchPreference) findPreference(context.getString(R.string.vibrate_on_preference_key));
+    mInCallNotificationsVibrate =
+        (SwitchPreference) findPreference(context.getString(R.string.in_call_notifications_vibrate_preference_key));
     mPlayDtmfTone =
         (SwitchPreference) findPreference(context.getString(R.string.play_dtmf_preference_key));
     mDtmfToneLength =
@@ -96,8 +99,14 @@ public class SoundSettingsFragment extends PreferenceFragment
 
     if (hasVibrator()) {
       mVibrateWhenRinging.setOnPreferenceChangeListener(this);
+      mInCallNotificationsVibrate.setOnPreferenceChangeListener(this);
     } else {
-      getPreferenceScreen().removePreference(mVibrateWhenRinging);
+      PreferenceScreen ps = getPreferenceScreen();
+      Preference inCallVibration = findPreference(
+        context.getString(R.string.incall_vibration_category_key));
+      ps.removePreference(mVibrateWhenRinging);
+      ps.removePreference(mInCallNotificationsVibrate);
+      ps.removePreference(inCallVibration);
       mVibrateWhenRinging = null;
     }
 
@@ -167,6 +176,15 @@ public class SoundSettingsFragment extends PreferenceFragment
       int index = mDtmfToneLength.findIndexOfValue((String) objValue);
       Settings.System.putInt(
           getActivity().getContentResolver(), Settings.System.DTMF_TONE_TYPE_WHEN_DIALING, index);
+    } else if (preference == mPlayDtmfTone) {
+      Settings.System.putInt(
+          getActivity().getContentResolver(),
+          Settings.System.DTMF_TONE_WHEN_DIALING,
+          mPlayDtmfTone.isChecked() ? PLAY_DTMF_TONE : NO_DTMF_TONE);
+    } else if (preference == mInCallNotificationsVibrate) {
+      boolean value = (Boolean) objValue;
+      Settings.System.putInt(getActivity().getContentResolver(),
+              Settings.System.INCALL_NOTIFICATIONS_VIBRATE, value ? 1 : 0);
     }
     return true;
   }
@@ -182,13 +200,7 @@ public class SoundSettingsFragment extends PreferenceFragment
           .show();
       return true;
     }
-    if (preference == mPlayDtmfTone) {
-      Settings.System.putInt(
-          getActivity().getContentResolver(),
-          Settings.System.DTMF_TONE_WHEN_DIALING,
-          mPlayDtmfTone.isChecked() ? PLAY_DTMF_TONE : NO_DTMF_TONE);
-    }
-    return true;
+      return true;
   }
 
   /** Updates the summary text on the ringtone preference with the name of the ringtone. */
